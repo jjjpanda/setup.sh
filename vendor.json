@@ -1,0 +1,10 @@
+{
+  "veracrypt": {
+    "url": "https://github.com/veracrypt/VeraCrypt/releases/download/VeraCrypt_1.26.31/veracrypt-1.26.31-Ubuntu-24.04-amd64.deb",
+    "sha256": "3892504464054312b255698e1034e6374315a9cd8046006fde046830995466c6"
+  },
+  "obsidian": {
+    "url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.15.0/obsidian_1.15.0_amd64.deb",
+    "sha256": "251805fdcb696af32129e8f5e8656f6688802fc38b169822175d23a74c5174b3"
+  }
+}
