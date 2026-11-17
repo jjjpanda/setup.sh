@@ -14,6 +14,7 @@ REMOVE_PACKAGES = (
 )
 SERVICES = ()
 OLD_FILES = (
+    ".config/autostart/gammastep.desktop",
     ".config/autostart/redshift-night-light.desktop",
     ".config/redshift/redshift.conf",
     ".local/share/linux-setup/night-light.py",
@@ -65,6 +66,7 @@ def packages(host):
             "python3-gi", "xfce4-screensaver", "gir1.2-gtk-3.0", "ffmpeg",
             "veracrypt", "obsidian", "ufw", "gufw", "gammastep", "unionfs-fuse",
             "xfce4-power-manager-plugins", "x11-xserver-utils", "libglib2.0-bin",
+            "xfce4-pulseaudio-plugin", "pavucontrol", "util-linux",
             "adwaita-icon-theme", "gnome-themes-extra",
             "fonts-noto-core", "fonts-dejavu-core", "fonts-inter", "fonts-jetbrains-mono",
         ]
@@ -116,7 +118,11 @@ def settings(host, session, launchers, xf, gs):
     ]
     whisker = any(any(host.path("/usr/lib").glob(pattern)) for pattern in
                   ("xfce4/panel/plugins/libwhiskermenu.so", "*/xfce4/panel/plugins/libwhiskermenu.so"))
-    plugins = ["whiskermenu" if whisker else "applicationsmenu"] + names + ["tasklist", "separator", "systray", "power-manager-plugin", "clock"]
+    plugins = ["whiskermenu" if whisker else "applicationsmenu"] + names + [
+        "tasklist", "separator", "systray",
+        *(["pulseaudio"] if host.manager == "apt" else []),
+        "power-manager-plugin", "clock",
+    ]
     count = len(plugins)
     if len(numbers) != count:
         import re
@@ -142,6 +148,9 @@ def settings(host, session, launchers, xf, gs):
             xf("xfce4-panel", "/plugins/plugin-" + str(number) + "/icon-size", "i", 0)
             xf("xfce4-panel", "/plugins/plugin-" + str(number) + "/single-row", "b", True)
             xf("xfce4-panel", "/plugins/plugin-" + str(number) + "/square-icons", "b", True)
+        elif name == "pulseaudio":
+            xf("xfce4-panel", "/plugins/plugin-" + str(number) + "/enable-keyboard-shortcuts", "b", True)
+            xf("xfce4-panel", "/plugins/plugin-" + str(number) + "/mixer-command", "s", "pavucontrol")
         elif name in ("whiskermenu", "applicationsmenu"):
             base = "/plugins/plugin-" + str(number) + "/"
             xf("xfce4-panel", base + "button-icon", "s", "view-app-grid")
@@ -231,7 +240,14 @@ def files(host, add, launchers, errors, source):
             updated = update_ini_key(path.read_text(errors="replace"), section, "background", "#12161f")
             add("/etc/lightdm/" + name, updated, path.stat().st_mode & 0o777, system=True)
     add(".config/gammastep/config.ini", f"[general]\ntemp-day={DAY_TEMP}\ntemp-night={NIGHT_TEMP}\ndawn-time={DAWN}\ndusk-time={DUSK}\nadjustment-method=randr\n")
-    add(".config/autostart/gammastep.desktop", "[Desktop Entry]\nType=Application\nName=Gammastep\nExec=gammastep\nTerminal=false\n")
+    # One entry point for login and the app menu: the indicator owns the worker.
+    # flock also makes repeated launches harmless while that indicator is alive.
+    command = (f"flock -n /run/user/{host.uid}/linux-setup-gammastep.lock gammastep-indicator"
+               if host.manager == "apt" else "gammastep")
+    night_light = f"[Desktop Entry]\nType=Application\nName=Gammastep\nExec={command}\nIcon=gammastep\nTerminal=false\n"
+    add(".config/autostart/gammastep-indicator.desktop", night_light)
+    if host.manager == "apt":
+        add(".local/share/applications/gammastep-indicator.desktop", night_light)
     private_icon = "firefox-nightly" if host.path("/usr/share/icons/Mint-Y/apps/32/firefox-nightly.png").is_file() else "firefox"
     commands = dict(
         files=("Files", "thunar %F", "system-file-manager"),
