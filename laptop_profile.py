@@ -230,6 +230,14 @@ def files(host, add, launchers, errors, source):
     for version in (3, 4):
         add(f".config/gtk-{version}.0/settings.ini", gtk)
     add(".config/fontconfig/fonts.conf", FONTS)
+    add("/etc/X11/xorg.conf.d/90-linux-setup-touchpad.conf", (
+        'Section "InputClass"\n'
+        '    Identifier "linux-setup natural touchpad scrolling"\n'
+        '    MatchIsTouchpad "on"\n'
+        '    MatchDriver "libinput"\n'
+        '    Option "NaturalScrolling" "true"\n'
+        'EndSection\n'
+    ), system=True)
     add("/etc/sysctl.d/90-desktop-responsiveness.conf", "vm.swappiness = 10\nvm.vfs_cache_pressure = 50\n", system=True)
     if host.manager == "apt":
         policy = ("Package: " + " ".join(REMOVE_PACKAGES) + "\nPin: version *\nPin-Priority: -1\n") if REMOVE_PACKAGES else ""

@@ -23,8 +23,8 @@ with `--apply`), installs the apps in `packages()`
 (VeraCrypt and Obsidian fall back to pinned upstream `.deb` entries in
 [`vendor.json`](vendor.json)), removes and blocks `REMOVE_PACKAGES`, enables
 UFW (deny incoming), and sets the dark theme, fonts, bottom panel, Gammastep
-schedule and Bash helpers. Private shell preferences go in
-`~/.config/linux-setup/local.bash`.
+schedule, natural (inverse) touchpad scrolling and Bash helpers. Private shell
+preferences go in `~/.config/linux-setup/local.bash`.
 
 ## SM-T280 tablet
 
